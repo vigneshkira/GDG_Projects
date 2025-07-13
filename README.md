@@ -2,9 +2,7 @@
 
 TaskFlow is a modern, AI-powered task management application designed to streamline your workflow and boost your productivity. Built with Next.js, Firebase, and Genkit, it provides a seamless experience for managing tasks, organizing information, and leveraging artificial intelligence to get things done faster.
 
-[Download Demo Video](https://drive.google.com/file/d/FILE_ID_HERE/view](https://drive.google.com/file/d/13OxhLsQVtVYyAb4fBvNWAx5Weqb8skUr/view?usp=sharing
-)
-
+Demo Video 
 https://drive.google.com/file/d/13OxhLsQVtVYyAb4fBvNWAx5Weqb8skUr/view?usp=drive_link
 
 
