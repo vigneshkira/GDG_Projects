@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Bot, Loader2, Send } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Bot, Loader2, Send, Wand2 } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -16,40 +16,89 @@ import { Input } from '@/components/ui/input';
 import { useTasks } from '@/hooks/use-tasks';
 import { taskChatbot } from '@/ai/flows/task-chatbot';
 import { ScrollArea } from './ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Avatar, AvatarFallback } from './ui/avatar';
 import { cn } from '@/lib/utils';
-import { Icons } from './icons';
 
 interface Message {
-  role: 'user' | 'bot';
+  role: 'user' | 'bot' | 'system';
   content: string;
+  toolRequest?: any;
+  toolResponse?: any;
 }
 
 export function TaskChatbot() {
-  const { tasks } = useTasks();
+  const { tasks, setTasks } = useTasks();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage: Message = { role: 'user', content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      const taskList = JSON.stringify(tasks, null, 2);
-      const response = await taskChatbot({ question: input, taskList });
-      const botMessage: Message = { role: 'bot', content: response.answer };
-      setMessages((prev) => [...prev, botMessage]);
+      const history = newMessages.map((msg) => ({
+        role: msg.role === 'bot' ? 'model' : 'user',
+        parts: [{ text: msg.content }],
+      }));
+
+      const response = await taskChatbot({
+        question: input,
+        history,
+        tasks,
+      });
+
+      let botMessage: Message;
+
+      if (response.toolRequest) {
+        botMessage = {
+          role: 'system',
+          content: `Used tool: ${response.toolRequest.name}`,
+          toolRequest: response.toolRequest,
+          toolResponse: response.toolResponse,
+        };
+        const followupResponse = await taskChatbot({
+          question: `The tool ${response.toolRequest.name} was called and returned: ${JSON.stringify(response.toolResponse)}. Acknowledge the result and ask what to do next.`,
+          history: [
+            ...history,
+            { role: 'model', parts: [{ toolCode: response.toolRequest }] },
+            { role: 'user', parts: [{ toolResult: response.toolResponse }] },
+          ],
+          tasks: response.tasks,
+        });
+
+        setMessages([
+          ...newMessages,
+          botMessage,
+          { role: 'bot', content: followupResponse.answer },
+        ]);
+        setTasks(followupResponse.tasks);
+      } else {
+        botMessage = { role: 'bot', content: response.answer };
+        setMessages([...newMessages, botMessage]);
+        setTasks(response.tasks);
+      }
     } catch (error) {
       const errorMessage: Message = {
         role: 'bot',
         content: "Sorry, I couldn't process that. Please try again.",
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages([...newMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -66,11 +115,9 @@ export function TaskChatbot() {
       <SheetContent className="flex flex-col">
         <SheetHeader>
           <SheetTitle>Task Chatbot</SheetTitle>
-          <SheetDescription>
-            Ask me anything about your tasks.
-          </SheetDescription>
+          <SheetDescription>Ask me anything about your tasks, or tell me to create or delete one.</SheetDescription>
         </SheetHeader>
-        <ScrollArea className="flex-grow my-4 pr-4">
+        <ScrollArea className="flex-grow my-4 pr-4" ref={scrollAreaRef}>
           <div className="space-y-4">
             {messages.map((message, index) => (
               <div
@@ -81,31 +128,40 @@ export function TaskChatbot() {
                 )}
               >
                 {message.role === 'bot' && (
-                  <Avatar className='w-8 h-8'>
-                     <AvatarFallback><Bot className="w-5 h-5"/></AvatarFallback>
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback>
+                      <Bot className="w-5 h-5" />
+                    </AvatarFallback>
                   </Avatar>
                 )}
-                <div
-                  className={cn(
-                    'max-w-xs rounded-lg p-3 text-sm',
-                    message.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  )}
-                >
-                  {message.content}
-                </div>
-                 {message.role === 'user' && (
-                  <Avatar className='w-8 h-8'>
-                     <AvatarFallback>U</AvatarFallback>
+                {message.role === 'system' ? (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground p-2 bg-muted rounded-lg w-full justify-center">
+                    <Wand2 className="w-4 h-4" />
+                    <span>{message.content}</span>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      'max-w-xs rounded-lg p-3 text-sm',
+                      message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                    )}
+                  >
+                    {message.content}
+                  </div>
+                )}
+                {message.role === 'user' && (
+                  <Avatar className="w-8 h-8">
+                    <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                 )}
               </div>
             ))}
             {isLoading && (
               <div className="flex items-start gap-3">
-                <Avatar className='w-8 h-8'>
-                    <AvatarFallback><Bot className="w-5 h-5"/></AvatarFallback>
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback>
+                    <Bot className="w-5 h-5" />
+                  </AvatarFallback>
                 </Avatar>
                 <div className="max-w-xs rounded-lg bg-muted p-3">
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -125,7 +181,7 @@ export function TaskChatbot() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your question..."
+              placeholder="e.g., Create a task to buy milk"
               disabled={isLoading}
             />
             <Button type="submit" disabled={isLoading}>

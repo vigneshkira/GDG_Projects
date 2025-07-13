@@ -1,11 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Dispatch, SetStateAction } from 'react';
 import type { Task } from '@/lib/types';
 
 const STORE_KEY = 'taskflow-tasks';
 
-export const useTasks = () => {
+interface UseTasksReturn {
+    tasks: Task[];
+    setTasks: Dispatch<SetStateAction<Task[]>>;
+    addTask: (task: Task) => void;
+    updateTask: (taskId: string, updates: Partial<Omit<Task, 'id'>>) => void;
+    deleteTask: (taskId: string) => void;
+    isLoaded: boolean;
+}
+
+
+export const useTasks = (): UseTasksReturn => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -47,5 +57,5 @@ export const useTasks = () => {
     setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
   }, []);
 
-  return { tasks, addTask, updateTask, deleteTask, isLoaded };
+  return { tasks, setTasks, addTask, updateTask, deleteTask, isLoaded };
 };
