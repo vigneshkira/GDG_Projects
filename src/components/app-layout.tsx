@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, LogOut, Wand2, Home } from 'lucide-react';
+import { Plus, LogOut, Wand2, Home, Inbox } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import type { Task } from '@/lib/types';
 import { Icons } from '@/components/icons';
@@ -33,6 +33,7 @@ interface AppLayoutProps {
   editingTask?: Task | null;
   setEditingTask?: React.Dispatch<React.SetStateAction<Task | null>>;
   setCreateTaskOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+  prefillTask?: Partial<Task>;
 }
 
 export function AppLayout({
@@ -42,6 +43,7 @@ export function AppLayout({
   editingTask,
   setEditingTask,
   setCreateTaskOpen,
+  prefillTask,
 }: AppLayoutProps) {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
@@ -62,6 +64,7 @@ export function AppLayout({
   }
 
   const isTasksPage = pathname === '/';
+  const showNewTaskButton = isTasksPage || pathname === '/inbox';
 
   return (
     <SidebarProvider>
@@ -74,7 +77,7 @@ export function AppLayout({
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {isTasksPage && handleDialogClose && setCreateTaskOpen && (
+            {showNewTaskButton && handleDialogClose && setCreateTaskOpen && (
                <SidebarMenuItem>
                  <Dialog open={createTaskOpen} onOpenChange={handleDialogClose}>
                    <DialogTrigger asChild>
@@ -92,7 +95,7 @@ export function AppLayout({
                      </DialogHeader>
                      {setEditingTask && (
                         <TaskForm
-                            taskToEdit={editingTask}
+                            taskToEdit={editingTask || prefillTask}
                             onFinished={() => handleDialogClose(false)}
                         />
                      )}
@@ -106,6 +109,16 @@ export function AppLayout({
                         <span>
                             <Home />
                             <span>Tasks</span>
+                        </span>
+                    </SidebarMenuButton>
+                </Link>
+             </SidebarMenuItem>
+             <SidebarMenuItem>
+                <Link href="/inbox" passHref>
+                    <SidebarMenuButton asChild isActive={pathname === '/inbox'}>
+                        <span>
+                            <Inbox />
+                            <span>Unified Inbox</span>
                         </span>
                     </SidebarMenuButton>
                 </Link>
