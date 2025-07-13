@@ -1,6 +1,6 @@
 
 export type Notification = {
-    platform: 'LinkedIn' | 'Gmail' | 'Instagram' | 'WhatsApp';
+    platform: 'LinkedIn' | 'Gmail' | 'Instagram' | 'WhatsApp' | 'Google Classroom';
     sender: string;
     content: string;
     time: string;
@@ -9,6 +9,14 @@ export type Notification = {
 };
 
 export const mockNotifications: Notification[] = [
+    {
+        platform: 'Google Classroom',
+        sender: 'CS 101: Intro to Programming',
+        content: 'New assignment "Final Project Proposal" posted. Due May 28.',
+        time: '2m ago',
+        category: 'Important',
+        detectedDate: 'May 28'
+    },
     {
         platform: 'LinkedIn',
         sender: 'Jane Doe @ Google',

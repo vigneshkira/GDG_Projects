@@ -44,7 +44,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface TaskFormProps {
-  taskToEdit?: Task | null;
+  taskToEdit?: Partial<Task> | null;
   onFinished: () => void;
 }
 
@@ -72,7 +72,7 @@ export function TaskForm({ taskToEdit, onFinished }: TaskFormProps) {
 
   async function onSubmit(values: FormValues) {
     try {
-      if (taskToEdit) {
+      if (taskToEdit && taskToEdit.id) {
         // This is an edit
         const taskData = {
           ...values,
@@ -218,7 +218,7 @@ export function TaskForm({ taskToEdit, onFinished }: TaskFormProps) {
           )}
         />
         <div className="flex justify-end">
-          <Button type="submit">{taskToEdit ? 'Save Changes' : 'Create Task'}</Button>
+          <Button type="submit">{taskToEdit?.id ? 'Save Changes' : 'Create Task'}</Button>
         </div>
       </form>
     </Form>
