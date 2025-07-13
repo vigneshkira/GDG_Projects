@@ -22,8 +22,6 @@ export type TaskChatbotInput = z.infer<typeof TaskChatbotInputSchema>;
 const TaskChatbotOutputSchema = z.object({
   answer: z.string().describe('The answer to the question about the tasks.'),
   tasks: z.array(TaskSchema),
-  toolRequest: z.any().optional(),
-  toolResponse: z.any().optional(),
 });
 export type TaskChatbotOutput = z.infer<typeof TaskChatbotOutputSchema>;
 
@@ -76,37 +74,6 @@ export async function taskChatbot(input: TaskChatbotInput): Promise<TaskChatbotO
   return taskChatbotFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'taskChatbotPrompt',
-  input: {
-    schema: z.object({
-      question: z.string(),
-      taskList: z.string(),
-    }),
-  },
-  output: {
-    schema: z.object({
-      answer: z.string(),
-    }),
-  },
-  prompt: `You are a chatbot assistant helping the user manage tasks.
-
-  The user will provide a question about their tasks, and a list of tasks in JSON format.
-
-  Your job is to answer the question based on the information provided in the task list.
-  If you use a tool, provide a brief acknowledgement of the action taken in your answer.
-
-  Here is the question: {{{question}}}
-
-  Here is the task list:
-  \`\`\`json
-  {{{taskList}}}
-  \`\`\`
-
-  Answer:`,
-  tools: [addTaskTool, deleteTaskTool],
-});
-
 const taskChatbotFlow = ai.defineFlow(
   {
     name: 'taskChatbotFlow',
@@ -115,35 +82,26 @@ const taskChatbotFlow = ai.defineFlow(
   },
   async (input) => {
     tasks = input.tasks;
-    const { history, stream } = ai.generateStream({
+
+    const { response, history } = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
-      prompt: {
-        system: `You are a helpful assistant that can manage a user's tasks. You can add tasks and delete tasks. You can also answer questions about the tasks.`,
-        messages: input.history,
-      },
+      prompt: input.question,
       history: input.history,
       tools: [addTaskTool, deleteTaskTool],
-      context: {
-        tasks,
-      },
     });
 
-    for await (const chunk of stream) {
-      if (chunk.isToolRequest()) {
-        const toolResponse = await chunk.toolRequest!.run();
-        return {
-          answer: toolResponse.response as string,
-          tasks,
-          toolRequest: chunk.toolRequest,
-          toolResponse,
-        };
-      }
-    }
-    const response = await history;
     const lastMessage = response.at(-1);
 
+    if (lastMessage?.isToolResponse()) {
+        const toolResponse = lastMessage.toolResponse();
+        return {
+            answer: toolResponse.response as string,
+            tasks,
+        }
+    }
+
     return {
-      answer: lastMessage?.content[0]?.text ?? "I'm not sure how to respond.",
+      answer: response.text ?? "I'm not sure how to respond.",
       tasks,
     };
   }

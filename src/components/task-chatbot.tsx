@@ -22,8 +22,6 @@ import { cn } from '@/lib/utils';
 interface Message {
   role: 'user' | 'bot' | 'system';
   content: string;
-  toolRequest?: any;
-  toolResponse?: any;
 }
 
 export function TaskChatbot() {
@@ -63,37 +61,12 @@ export function TaskChatbot() {
         tasks,
       });
 
-      let botMessage: Message;
+      const botMessage: Message = { role: 'bot', content: response.answer };
+      setMessages([...newMessages, botMessage]);
+      setTasks(response.tasks);
 
-      if (response.toolRequest) {
-        botMessage = {
-          role: 'system',
-          content: `Used tool: ${response.toolRequest.name}`,
-          toolRequest: response.toolRequest,
-          toolResponse: response.toolResponse,
-        };
-        const followupResponse = await taskChatbot({
-          question: `The tool ${response.toolRequest.name} was called and returned: ${JSON.stringify(response.toolResponse)}. Acknowledge the result and ask what to do next.`,
-          history: [
-            ...history,
-            { role: 'model', parts: [{ toolCode: response.toolRequest }] },
-            { role: 'user', parts: [{ toolResult: response.toolResponse }] },
-          ],
-          tasks: response.tasks,
-        });
-
-        setMessages([
-          ...newMessages,
-          botMessage,
-          { role: 'bot', content: followupResponse.answer },
-        ]);
-        setTasks(followupResponse.tasks);
-      } else {
-        botMessage = { role: 'bot', content: response.answer };
-        setMessages([...newMessages, botMessage]);
-        setTasks(response.tasks);
-      }
     } catch (error) {
+      console.error(error);
       const errorMessage: Message = {
         role: 'bot',
         content: "Sorry, I couldn't process that. Please try again.",
