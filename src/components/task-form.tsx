@@ -71,21 +71,22 @@ export function TaskForm({ taskToEdit, onFinished }: TaskFormProps) {
   });
 
   async function onSubmit(values: FormValues) {
-    const taskData = {
-      ...values,
-      dueDate: values.dueDate?.toISOString(),
-    };
-
     try {
       if (taskToEdit) {
         // This is an edit
-        // The properties in taskData are the ones from the form, which don't include id or status
-        // so we need to pass them separately to updateTask
+        const taskData = {
+          ...values,
+          dueDate: values.dueDate?.toISOString(),
+        };
         await updateTask(taskToEdit.id, taskData);
         toast({ title: 'Task Updated', description: `"${values.title}" has been updated.` });
       } else {
         // This is a new task
-        await addTask(taskData);
+        const newTaskData = {
+            ...values,
+            dueDate: values.dueDate?.toISOString(),
+        };
+        await addTask(newTaskData);
         toast({ title: 'Task Created', description: `"${values.title}" has been added.` });
       }
       onFinished();
