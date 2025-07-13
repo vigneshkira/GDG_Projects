@@ -16,6 +16,7 @@ const TaskChatbotInputSchema = z.object({
   question: z.string().describe('The question to ask the chatbot about tasks.'),
   history: z.array(z.any()),
   tasks: z.array(TaskSchema),
+  userId: z.string(),
 });
 export type TaskChatbotInput = z.infer<typeof TaskChatbotInputSchema>;
 
@@ -29,6 +30,7 @@ const addTaskTool = ai.defineTool(
     name: 'addTask',
     description: 'Add a new task to the list.',
     inputSchema: z.object({
+      userId: z.string(),
       title: z.string(),
       description: z.string().optional(),
       priority: z.enum(['low', 'medium', 'high']).default('medium'),
@@ -51,12 +53,13 @@ const deleteTaskTool = ai.defineTool(
     description: 'Delete a task by its title.',
     inputSchema: z.object({
       title: z.string(),
+      userId: z.string(),
     }),
     outputSchema: z.string(),
   },
   async (input) => {
     try {
-      const taskToDelete = await findTaskByTitle(input.title);
+      const taskToDelete = await findTaskByTitle(input.title, input.userId);
       if (taskToDelete) {
         await deleteTask(taskToDelete.id);
         return `Task "${input.title}" deleted successfully.`;
@@ -84,6 +87,10 @@ const taskChatbotFlow = ai.defineFlow(
       prompt: input.question,
       history: input.history,
       tools: [addTaskTool, deleteTaskTool],
+      toolConfig: {
+        // Pass the userId to every tool call automatically.
+        commonPayload: { userId: input.userId },
+      },
       system: `You are a helpful assistant for managing a task list. The user can ask you to add, delete, or ask questions about their tasks. Here is the current list of tasks: ${JSON.stringify(
         input.tasks
       )}`,

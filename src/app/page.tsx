@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   ChevronsLeft,
   LayoutDashboard,
@@ -9,6 +10,7 @@ import {
   MoreVertical,
   Plus,
   Bot,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +41,7 @@ import { TaskForm } from '@/components/task-form';
 import { SummarizeEmailDialog } from '@/components/summarize-email-dialog';
 import { TaskChatbot } from '@/components/task-chatbot';
 import { useTasks } from '@/hooks/use-tasks';
+import { useAuth } from '@/hooks/use-auth';
 import { Task } from '@/lib/types';
 import { Icons } from '@/components/icons';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -47,7 +50,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function Home() {
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
   const [editingTask, setEditingTask] = React.useState<Task | null>(null);
-  const { isLoaded } = useTasks();
+  const { tasks, isLoaded } = useTasks();
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
+
+  React.useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
   
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
@@ -59,6 +70,14 @@ export default function Home() {
       setEditingTask(null);
     }
     setCreateTaskOpen(open);
+  }
+
+  if (loading || !user) {
+    return (
+       <div className="flex h-screen w-full items-center justify-center">
+         <Skeleton className="h-48 w-48 rounded-full" />
+       </div>
+    );
   }
 
   return (
@@ -101,7 +120,8 @@ export default function Home() {
                     title: data.taskTitle,
                     description: data.taskDescription,
                     priority: 'medium',
-                    status: 'todo'
+                    status: 'todo',
+                    userId: user.uid,
                   });
                   setCreateTaskOpen(true);
               }} />
@@ -111,6 +131,10 @@ export default function Home() {
         <SidebarFooter>
           <TaskChatbot />
           <ThemeToggle />
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground" onClick={signOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>

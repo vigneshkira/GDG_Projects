@@ -5,6 +5,7 @@ export type Status = 'todo' | 'in-progress' | 'done';
 
 export const TaskSchema = z.object({
   id: z.string(),
+  userId: z.string(),
   title: z.string(),
   description: z.string().optional(),
   dueDate: z.string().optional(),

@@ -17,10 +17,16 @@ const TASKS_COLLECTION = 'tasks';
 
 // READ (real-time)
 export const getTasks = (
+  userId: string,
   setTasks: (tasks: Task[]) => void,
   onLoaded: () => void
 ) => {
-  const q = collection(db, TASKS_COLLECTION);
+  if (!userId) {
+    onLoaded();
+    return () => {}; // Return an empty unsubscribe function
+  }
+  const q = query(collection(db, TASKS_COLLECTION), where('userId', '==', userId));
+  
   const unsubscribe = onSnapshot(
     q,
     (querySnapshot) => {
@@ -74,11 +80,13 @@ export const deleteTask = async (taskId: string) => {
 };
 
 // FIND by title (for chatbot)
-export const findTaskByTitle = async (title: string): Promise<Task | null> => {
+export const findTaskByTitle = async (title: string, userId: string): Promise<Task | null> => {
+    if (!userId) return null;
     try {
         const q = query(
             collection(db, TASKS_COLLECTION),
             where('title', '==', title),
+            where('userId', '==', userId),
             limit(1)
         );
         const querySnapshot = await getDocs(q);

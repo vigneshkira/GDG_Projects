@@ -8,11 +8,12 @@ import {
   updateTask as updateTaskInDb,
   deleteTask as deleteTaskFromDb,
 } from '@/lib/firestore';
+import { useAuth } from './use-auth';
 
 interface UseTasksReturn {
     tasks: Task[];
     setTasks: Dispatch<SetStateAction<Task[]>>;
-    addTask: (task: Omit<Task, 'id' | 'status'>) => Promise<void>;
+    addTask: (task: Omit<Task, 'id' | 'status' | 'userId'>) => Promise<void>;
     updateTask: (taskId: string, updates: Partial<Omit<Task, 'id'>>) => Promise<void>;
     deleteTask: (taskId: string) => Promise<void>;
     isLoaded: boolean;
@@ -21,20 +22,28 @@ interface UseTasksReturn {
 export const useTasks = (): UseTasksReturn => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // onSnapshot will handle real-time updates
-    const unsubscribe = getTasks(setTasks, () => setIsLoaded(true));
-    return () => unsubscribe();
-  }, []);
+    if (user?.uid) {
+      setIsLoaded(false);
+      const unsubscribe = getTasks(user.uid, setTasks, () => setIsLoaded(true));
+      return () => unsubscribe();
+    } else {
+      setTasks([]);
+      setIsLoaded(true);
+    }
+  }, [user]);
 
-  const addTask = useCallback(async (task: Omit<Task, 'id' | 'status'>) => {
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'status' | 'userId'>) => {
+    if (!user) throw new Error("User not authenticated");
     const newTask = {
       ...task,
+      userId: user.uid,
       status: 'todo' as const,
     };
     await addTaskToDb(newTask);
-  }, []);
+  }, [user]);
 
   const updateTask = useCallback(async (taskId: string, updates: Partial<Omit<Task, 'id'>>) => {
     await updateTaskInDb(taskId, updates);

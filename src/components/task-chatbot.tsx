@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTasks } from '@/hooks/use-tasks';
+import { useAuth } from '@/hooks/use-auth';
 import { taskChatbot } from '@/ai/flows/task-chatbot';
 import { ScrollArea } from './ui/scroll-area';
 import { Avatar, AvatarFallback } from './ui/avatar';
@@ -26,6 +27,7 @@ interface Message {
 
 export function TaskChatbot() {
   const { tasks } = useTasks();
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -41,7 +43,7 @@ export function TaskChatbot() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || !user) return;
 
     const userMessage: Message = { role: 'user', content: input };
     const newMessages = [...messages, userMessage];
@@ -59,6 +61,7 @@ export function TaskChatbot() {
         question: input,
         history,
         tasks,
+        userId: user.uid,
       });
 
       const botMessage: Message = { role: 'bot', content: response.answer };
@@ -123,7 +126,7 @@ export function TaskChatbot() {
                 )}
                 {message.role === 'user' && (
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
                   </Avatar>
                 )}
               </div>
@@ -154,9 +157,9 @@ export function TaskChatbot() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="e.g., Create a task to buy milk"
-              disabled={isLoading}
+              disabled={isLoading || !user}
             />
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || !user}>
               <Send className="h-4 w-4" />
             </Button>
           </form>
