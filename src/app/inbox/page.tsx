@@ -58,6 +58,10 @@ export default function InboxPage() {
     }
   };
 
+  const importantNotifications = mockNotifications.filter(
+    (notification) => notification.category === 'Important'
+  );
+
   return (
     <AppLayout
       createTaskOpen={createTaskOpen}
@@ -69,12 +73,15 @@ export default function InboxPage() {
     >
       <SidebarInset>
         <div className="p-4 sm:p-6 lg:p-8">
-            <div className="flex items-center gap-4 mb-8">
+            <div className="flex items-center gap-4 mb-2">
                 <SidebarTrigger className="md:hidden" />
                 <h1 className="text-2xl font-bold font-headline tracking-tight">Unified Inbox</h1>
             </div>
+            <p className="text-muted-foreground mb-8">
+              Showing only messages classified as "Important".
+            </p>
             <div className="max-w-4xl mx-auto space-y-4">
-                {mockNotifications.map((notification, index) => (
+                {importantNotifications.map((notification, index) => (
                     <Card key={index} className="overflow-hidden">
                         <CardHeader className="p-4 flex flex-row items-start gap-4 bg-muted/50">
                             <div className="flex-shrink-0">
@@ -119,3 +126,5 @@ export default function InboxPage() {
     </AppLayout>
   )
 }
+
+    
