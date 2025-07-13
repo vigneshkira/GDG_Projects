@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { conceptToTask, ConceptToTaskOutput } from '@/ai/flows/concept-to-task';
+import { conceptToTask } from '@/ai/flows/concept-to-task';
+import type { ConceptToTaskOutput } from '@/lib/ai-types';
 import { Loader2, Sparkles, Wand2 } from 'lucide-react';
 import { useTasks } from '@/hooks/use-tasks';
 import { Skeleton } from '@/components/ui/skeleton';
