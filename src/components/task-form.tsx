@@ -78,12 +78,14 @@ export function TaskForm({ taskToEdit, onFinished }: TaskFormProps) {
 
     try {
       if (taskToEdit) {
+        // This is an edit
+        // The properties in taskData are the ones from the form, which don't include id or status
+        // so we need to pass them separately to updateTask
         await updateTask(taskToEdit.id, taskData);
         toast({ title: 'Task Updated', description: `"${values.title}" has been updated.` });
       } else {
-        await addTask({
-            ...taskData
-        });
+        // This is a new task
+        await addTask(taskData);
         toast({ title: 'Task Created', description: `"${values.title}" has been added.` });
       }
       onFinished();
