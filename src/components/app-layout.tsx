@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -100,22 +101,22 @@ export function AppLayout({
                </SidebarMenuItem>
             )}
              <SidebarMenuItem>
-                <Link href="/" passHref legacyBehavior>
+                <Link href="/" passHref>
                     <SidebarMenuButton asChild isActive={pathname === '/'}>
-                        <a>
+                        <span>
                             <Home />
                             <span>Tasks</span>
-                        </a>
+                        </span>
                     </SidebarMenuButton>
                 </Link>
              </SidebarMenuItem>
              <SidebarMenuItem>
-                <Link href="/ask-ai" passHref legacyBehavior>
+                <Link href="/ask-ai" passHref>
                     <SidebarMenuButton asChild isActive={pathname === '/ask-ai'}>
-                        <a>
+                        <span>
                             <Wand2 />
                             <span>Ask AI</span>
-                        </a>
+                        </span>
                     </SidebarMenuButton>
                 </Link>
              </SidebarMenuItem>
