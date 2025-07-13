@@ -10,18 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { v4 as uuidv4 } from 'uuid';
-
-export const TaskSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string().optional(),
-  dueDate: z.string().optional(),
-  priority: z.enum(['low', 'medium', 'high']),
-  status: z.enum(['todo', 'in-progress', 'done']),
-  calendarEventUrl: z.string().url().optional(),
-  driveFileUrl: z.string().url().optional(),
-});
-export type Task = z.infer<typeof TaskSchema>;
+import { Task, TaskSchema } from '@/lib/types';
 
 const TaskChatbotInputSchema = z.object({
   question: z.string().describe('The question to ask the chatbot about tasks.'),
@@ -154,7 +143,7 @@ const taskChatbotFlow = ai.defineFlow(
     const lastMessage = response.at(-1);
 
     return {
-      answer: lastMessage?.content[0].text ?? "I'm not sure how to respond.",
+      answer: lastMessage?.content[0]?.text ?? "I'm not sure how to respond.",
       tasks,
     };
   }
