@@ -9,8 +9,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { v4 as uuidv4 } from 'uuid';
 import { Task, TaskSchema } from '@/lib/types';
+import { addTask, deleteTask, findTaskByTitle } from '@/lib/firestore';
 
 const TaskChatbotInputSchema = z.object({
   question: z.string().describe('The question to ask the chatbot about tasks.'),
@@ -21,11 +21,8 @@ export type TaskChatbotInput = z.infer<typeof TaskChatbotInputSchema>;
 
 const TaskChatbotOutputSchema = z.object({
   answer: z.string().describe('The answer to the question about the tasks.'),
-  tasks: z.array(TaskSchema),
 });
 export type TaskChatbotOutput = z.infer<typeof TaskChatbotOutputSchema>;
-
-let tasks: Task[] = [];
 
 const addTaskTool = ai.defineTool(
   {
@@ -39,13 +36,12 @@ const addTaskTool = ai.defineTool(
     outputSchema: z.string(),
   },
   async (input) => {
-    const newTask: Task = {
-      ...input,
-      id: uuidv4(),
-      status: 'todo',
-    };
-    tasks.push(newTask);
-    return `Task "${input.title}" added successfully.`;
+    try {
+      await addTask({ ...input, status: 'todo' });
+      return `Task "${input.title}" added successfully.`;
+    } catch (e) {
+      return `Failed to add task "${input.title}".`;
+    }
   }
 );
 
@@ -59,14 +55,16 @@ const deleteTaskTool = ai.defineTool(
     outputSchema: z.string(),
   },
   async (input) => {
-    const taskToDelete = tasks.find(
-      (task) => task.title.toLowerCase() === input.title.toLowerCase()
-    );
-    if (taskToDelete) {
-      tasks = tasks.filter((task) => task.id !== taskToDelete.id);
-      return `Task "${input.title}" deleted successfully.`;
+    try {
+      const taskToDelete = await findTaskByTitle(input.title);
+      if (taskToDelete) {
+        await deleteTask(taskToDelete.id);
+        return `Task "${input.title}" deleted successfully.`;
+      }
+      return `Task "${input.title}" not found.`;
+    } catch (e) {
+      return `Failed to delete task "${input.title}".`;
     }
-    return `Task "${input.title}" not found.`;
   }
 );
 
@@ -81,28 +79,27 @@ const taskChatbotFlow = ai.defineFlow(
     outputSchema: TaskChatbotOutputSchema,
   },
   async (input) => {
-    tasks = input.tasks;
-
     const { response, history } = await ai.generate({
       model: 'googleai/gemini-2.0-flash',
       prompt: input.question,
       history: input.history,
       tools: [addTaskTool, deleteTaskTool],
+      system: `You are a helpful assistant for managing a task list. The user can ask you to add, delete, or ask questions about their tasks. Here is the current list of tasks: ${JSON.stringify(
+        input.tasks
+      )}`,
     });
 
     const lastMessage = response.at(-1);
 
     if (lastMessage?.isToolResponse()) {
-        const toolResponse = lastMessage.toolResponse();
-        return {
-            answer: toolResponse.response as string,
-            tasks,
-        }
+      const toolResponse = lastMessage.toolResponse();
+      return {
+        answer: toolResponse.response as string,
+      };
     }
 
     return {
       answer: response.text ?? "I'm not sure how to respond.",
-      tasks,
     };
   }
 );

@@ -70,24 +70,27 @@ export function TaskForm({ taskToEdit, onFinished }: TaskFormProps) {
     defaultValues,
   });
 
-  function onSubmit(values: FormValues) {
+  async function onSubmit(values: FormValues) {
     const taskData = {
       ...values,
       dueDate: values.dueDate?.toISOString(),
     };
 
-    if (taskToEdit) {
-      updateTask(taskToEdit.id, taskData);
-      toast({ title: 'Task Updated', description: `"${values.title}" has been updated.` });
-    } else {
-      addTask({
-        ...taskData,
-        id: crypto.randomUUID(),
-        status: 'todo',
-      });
-      toast({ title: 'Task Created', description: `"${values.title}" has been added.` });
+    try {
+      if (taskToEdit) {
+        await updateTask(taskToEdit.id, taskData);
+        toast({ title: 'Task Updated', description: `"${values.title}" has been updated.` });
+      } else {
+        await addTask({
+            ...taskData
+        });
+        toast({ title: 'Task Created', description: `"${values.title}" has been added.` });
+      }
+      onFinished();
+    } catch (error) {
+      console.error("Failed to save task:", error);
+      toast({ title: 'Error', description: 'Failed to save task. Please try again.', variant: 'destructive' });
     }
-    onFinished();
   }
 
   return (

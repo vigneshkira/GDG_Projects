@@ -25,7 +25,7 @@ interface Message {
 }
 
 export function TaskChatbot() {
-  const { tasks, setTasks } = useTasks();
+  const { tasks } = useTasks();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -63,7 +63,6 @@ export function TaskChatbot() {
 
       const botMessage: Message = { role: 'bot', content: response.answer };
       setMessages([...newMessages, botMessage]);
-      setTasks(response.tasks);
 
     } catch (error) {
       console.error(error);
