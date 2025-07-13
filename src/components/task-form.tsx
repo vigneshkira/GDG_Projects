@@ -30,7 +30,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useTasks } from '@/hooks/use-tasks';
 import type { Priority, Task } from '@/lib/types';
-import { useToast } from './ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters.'),
