@@ -69,7 +69,10 @@ export default function AskAiPage() {
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex items-center gap-4 mb-8">
                 <SidebarTrigger className="md:hidden" />
-                <h1 className="text-2xl font-bold font-headline tracking-tight">Ask AI</h1>
+                <div className="flex items-center gap-2">
+                    <Wand2 className="h-6 w-6" />
+                    <h1 className="text-2xl font-bold font-headline tracking-tight">Ask AI</h1>
+                </div>
             </div>
             <div className="max-w-2xl mx-auto">
                  <Card>

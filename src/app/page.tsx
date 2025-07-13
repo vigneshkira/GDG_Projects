@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { LayoutDashboard, List } from 'lucide-react';
+import { Home, LayoutDashboard, List } from 'lucide-react';
 import {
   SidebarTrigger,
   SidebarInset,
@@ -15,7 +15,7 @@ import type { Task } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppLayout } from '@/components/app-layout';
 
-export default function Home() {
+export default function TasksPage() {
   const [editingTask, setEditingTask] = React.useState<Task | null>(null);
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
   const { isLoaded } = useTasks();
@@ -52,7 +52,10 @@ export default function Home() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <SidebarTrigger className="md:hidden" />
-                  <h1 className="text-2xl font-bold font-headline tracking-tight">Tasks</h1>
+                  <div className="flex items-center gap-2">
+                    <Home className="h-6 w-6" />
+                    <h1 className="text-2xl font-bold font-headline tracking-tight">Tasks</h1>
+                  </div>
                 </div>
                 <TabsList>
                   <TabsTrigger value="board">

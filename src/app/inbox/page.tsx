@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/app-layout';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Archive, Calendar, MessageSquare, Plus, Reply } from 'lucide-react';
+import { Archive, Calendar, Inbox, MessageSquare, Plus, Reply } from 'lucide-react';
 import type { Task } from '@/lib/types';
 import { mockNotifications } from '@/lib/mock-data';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +77,10 @@ export default function InboxPage() {
         <div className="p-4 sm:p-6 lg:p-8">
             <div className="flex items-center gap-4 mb-2">
                 <SidebarTrigger className="md:hidden" />
-                <h1 className="text-2xl font-bold font-headline tracking-tight">Unified Inbox</h1>
+                 <div className="flex items-center gap-2">
+                    <Inbox className="h-6 w-6" />
+                    <h1 className="text-2xl font-bold font-headline tracking-tight">Unified Inbox</h1>
+                </div>
             </div>
             <p className="text-muted-foreground mb-8">
               Showing only messages classified as "Important".
